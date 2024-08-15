@@ -15,6 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
+/*****************************************************************/
 // Register user
 func Register(context *gin.Context) {
 	var input model.Register
@@ -102,7 +103,49 @@ func CreateUser(context *gin.Context) {
 		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
 		return
 	}
-	context.JSON(http.StatusCreated, gin.H{"user": savedUser})
+	context.JSON(http.StatusCreated, model.Response{
+		Status:  http.StatusCreated,
+		Message: "User created successfully",
+		Data: model.Data{
+			Status:  true,
+			Message: "User created successfully",
+			Result:  savedUser,
+		},
+	})
+}
+
+/*****************************************************************/
+// add suport / customer / admin
+func CreateUserByAdmin(context *gin.Context) {
+	var input model.User
+	if err := context.ShouldBindJSON(&input); err != nil {
+		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		return
+	}
+	if input.RoleID == 1 {
+		context.JSON(model.ResponseForbidden().Status, model.ResponseForbidden())
+		return
+	}
+	user := model.User{
+		Username: input.Username,
+		Email:    input.Email,
+		Password: input.Password,
+		RoleID:   input.RoleID,
+	}
+	savedUser, err := user.Save()
+	if err != nil {
+		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		return
+	}
+	context.JSON(http.StatusCreated, model.Response{
+		Status:  http.StatusCreated,
+		Message: "User created successfully",
+		Data: model.Data{
+			Status:  true,
+			Message: "User created successfully",
+			Result:  savedUser,
+		},
+	})
 }
 
 /*****************************************************************/
@@ -145,27 +188,8 @@ func GetUser(context *gin.Context) {
 /*****************************************************************/
 // get user authentication  info
 func Auth(context *gin.Context) {
-	tokenString, err := util.ExtractTokenFromHeader(context)
-	if err != nil {
-		context.JSON(401, gin.H{"error": "Invalid token"})
-		return
-	}
-	id, err := util.ExtractUserIDFromToken(tokenString)
-	if err != nil {
-		context.JSON(401, gin.H{"error": "Invalid token"})
-		return
-	}
 	var user model.User
-	userId := context.GetInt(id)
-	user, err = model.GetUserById((userId))
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
-			return
-		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
-		return
-	}
+	user = util.CurrentUser(context)
 	context.JSON(http.StatusOK, model.Response{
 		Status:  http.StatusOK,
 		Message: "Successfully get user details",
@@ -180,29 +204,10 @@ func Auth(context *gin.Context) {
 /*****************************************************************/
 // user update her informationn
 func UpdateUserAuth(context *gin.Context) {
-	tokenString, err := util.ExtractTokenFromHeader(context)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
-	id, err := util.ExtractUserIDFromToken(tokenString)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
 	var User model.User
-	userId := context.GetInt(id)
-	err = model.GetUser(&User, userId)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
-			return
-		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
-		return
-	}
+	User = util.CurrentUser(context)
 	context.BindJSON(&User)
-	err = model.UpdateUser(&User)
+	err := model.UpdateUser(&User)
 	if err != nil {
 		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
 		return
@@ -221,19 +226,9 @@ func UpdateUserAuth(context *gin.Context) {
 /*****************************************************************/
 // update user password
 func UpdatePassword(context *gin.Context) {
-	tokenString, err := util.ExtractTokenFromHeader(context)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
-	id, err := util.ExtractUserIDFromToken(tokenString)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
 	var User model.User
-	userId := context.GetInt(id)
-	err = model.GetUser(&User, userId)
+	User = util.CurrentUser(context)
+	err := model.GetUser(&User, int(User.ID))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
@@ -282,8 +277,41 @@ func UpdateUser(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
 			return
 		}
-
 		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		return
+	}
+	context.BindJSON(&User)
+	err = model.UpdateUser(&User)
+	if err != nil {
+		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		return
+	}
+	context.JSON(http.StatusOK, model.Response{
+		Status:  http.StatusOK,
+		Message: "User updated successfully",
+		Data: model.Data{
+			Status:  true,
+			Message: "User updated successfully",
+			Result:  User,
+		},
+	})
+}
+
+// update user
+func UpdateUserByAdmin(context *gin.Context) {
+	var User model.User
+	id, _ := strconv.Atoi(context.Param("id"))
+	err := model.GetUser(&User, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
+			return
+		}
+		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		return
+	}
+	if User.RoleID == 1 {
+		context.JSON(model.ResponseForbidden().Status, model.ResponseForbidden())
 		return
 	}
 	context.BindJSON(&User)

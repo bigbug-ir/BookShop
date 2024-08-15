@@ -13,17 +13,17 @@ func setUpAdminRoutes(adminRoutes *gin.RouterGroup) {
 	adminRoutes.Use(util.JWTAuthAdmin())
 	/*****************************************************************/
 	// admin user route
-	adminRoutes.POST("/users", controller.CreateUser)
+	adminRoutes.POST("/users", controller.CreateUserByAdmin)
 	adminRoutes.GET("/users", controller.GetUsers)
-	adminRoutes.GET("/user/:id", controller.GetUser)
-	adminRoutes.PUT("/user/:id", controller.UpdateUser)
+	adminRoutes.GET("/users/:id", controller.GetUser)
+	adminRoutes.PUT("/users/:id", controller.UpdateUserByAdmin)
 	/*****************************************************************/
 	// admin books route
 	adminRoutes.GET("/books", controller.GetBooks)
-	adminRoutes.GET("/book/:id", controller.GetBook)
-	adminRoutes.POST("/book", controller.AddBook)
-	adminRoutes.PUT("/book/:id", controller.UpdateBook)
-	adminRoutes.DELETE("/book/:id", controller.DeleteBook)
+	adminRoutes.GET("/books/:id", controller.GetBook)
+	adminRoutes.POST("/books", controller.AddBook)
+	adminRoutes.PUT("/books/:id", controller.UpdateBook)
+	adminRoutes.DELETE("/books/:id", controller.DeleteBook)
 	/*****************************************************************/
 	// admin order route
 	adminRoutes.GET("/orders", controller.GetOrders)
@@ -40,7 +40,7 @@ func setUpAdminRoutes(adminRoutes *gin.RouterGroup) {
 	adminRoutes.PUT("/password", controller.UpdatePassword)
 	/*****************************************************************/
 	// admin  category route
-	adminRoutes.GET("/categories", controller.GetCategories)
+	adminRoutes.GET("/category", controller.GetCategories)
 	adminRoutes.GET("/category/:id", controller.GetCategory)
 	adminRoutes.POST("/category", controller.AddCategory)
 	adminRoutes.PUT("/category/:id", controller.UpdateCategory)
@@ -48,9 +48,9 @@ func setUpAdminRoutes(adminRoutes *gin.RouterGroup) {
 	/*****************************************************************/
 	// admin author route
 	adminRoutes.GET("/authors", controller.GetAuthors)
-	adminRoutes.GET("/author/:id", controller.GetAuthor)
-	adminRoutes.POST("/author", controller.AddAuthor)
-	adminRoutes.PUT("/author/:id", controller.UpdateAuthor)
-	adminRoutes.DELETE("/author/:id", controller.DeleteAuthor)
+	adminRoutes.GET("/authors/:id", controller.GetAuthor)
+	adminRoutes.POST("/authors", controller.AddAuthor)
+	adminRoutes.PUT("/authors/:id", controller.UpdateAuthor)
+	adminRoutes.DELETE("/authors/:id", controller.DeleteAuthor)
 	/*****************************************************************/
 }

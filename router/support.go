@@ -13,18 +13,17 @@ func setUpSupportRoutes(supportRout *gin.RouterGroup) {
 	/*****************************************************************/
 	// support users
 	supportRout.GET("/users", controller.GetUsers)
-	supportRout.GET("/user/:id", controller.GetUser)
-	supportRout.PUT("/user/:id", controller.UpdateUser)
+	supportRout.GET("/users/:id", controller.GetUser)
+	supportRout.PUT("/users/:id", controller.UpdateUserByAdmin)
 	/*****************************************************************/
 	//suport books route
 	supportRout.GET("/books", controller.GetBooks)
-	supportRout.GET("/book/:id", controller.GetBook)
+	supportRout.GET("/books/:id", controller.GetBook)
 	/*****************************************************************/
 	//support order route
 	supportRout.GET("/orders", controller.GetOrders)
 	supportRout.GET("/orders/:id", controller.GetOrder)
 	supportRout.PUT("/orders/:id", controller.UpdateOrder)
-	supportRout.DELETE("/orders/:id", controller.DeleteOrder)
 	/*****************************************************************/
 	//support user profile route
 	supportRout.GET("/", controller.Auth)

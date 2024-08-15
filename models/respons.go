@@ -46,3 +46,12 @@ func ResponseBadRequuest() Response {
 }
 
 /*****************************************************************/
+
+func ResponseForbidden() Response {
+	return Response{
+		Status:  http.StatusForbidden,
+		Message: "Forbidden",
+	}
+}
+
+/*****************************************************************/

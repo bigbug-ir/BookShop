@@ -146,20 +146,11 @@ func GetOrderCustomer(context *gin.Context) {
 /*****************************************************************/
 // get a customer order for customer route
 func GetOrderCustomerAuth(context *gin.Context) {
-	token, err := util.ExtractTokenFromHeader(context)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
-	userId, err := util.ExtractUserIDFromToken(token)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
-	user := context.GetInt(userId)
+	var User model.User
+	User = util.CurrentUser(context)
 	id, _ := strconv.Atoi(context.Param("id"))
 	var order model.Order
-	err = model.GetOrderCustomer(&order, id, user)
+	err := model.GetOrderCustomer(&order, id, int(User.ID))
 	if err != nil {
 		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
 		return
@@ -178,19 +169,10 @@ func GetOrderCustomerAuth(context *gin.Context) {
 /*****************************************************************/
 // get all customer for customer route
 func GetAllOrderCustomerAuth(context *gin.Context) {
-	token, err := util.ExtractTokenFromHeader(context)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
-	userId, err := util.ExtractUserIDFromToken(token)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
-	id := context.GetInt(userId)
+	var User model.User
+	User = util.CurrentUser(context)
 	var order []model.Order
-	err = model.GetOrdersCustomer(&order, id)
+	err := model.GetOrdersCustomer(&order, int(User.ID))
 	if err != nil {
 		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
 		return

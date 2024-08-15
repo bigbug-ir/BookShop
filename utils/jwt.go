@@ -16,7 +16,6 @@ import (
 )
 
 /*****************************************************************/
-
 // generate JWT token
 func GenerateJWT(user model.User) (string, error) {
 	varprivateKeyPEM, err := ioutil.ReadFile("private_key.pem")
@@ -34,7 +33,6 @@ func GenerateJWT(user model.User) (string, error) {
 }
 
 /*****************************************************************/
-
 // validate JWT token
 func ValidateJWT(context *gin.Context) error {
 	token, err := getToken(context)

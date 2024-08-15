@@ -128,16 +128,12 @@ func UpdateBook(context *gin.Context) {
 		return
 	}
 	book = model.Book{
-		ID:    book.ID,
-		Title: input.Title,
-		Author: model.Author{
-			Name: input.Author.Name,
-		},
+		ID:          book.ID,
+		Title:       input.Title,
 		Description: input.Description,
 		Price:       input.Price,
-		Category: model.Category{
-			Name: input.Category.Name,
-		},
+		AuthorID:    input.AuthorID,
+		CategoryID:  input.CategoryID,
 	}
 	err = model.UpdateBook(&book)
 	if err != nil {

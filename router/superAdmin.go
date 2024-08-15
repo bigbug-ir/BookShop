@@ -12,18 +12,18 @@ func setUpSuperAdminRoutes(superAdminRoute *gin.RouterGroup) {
 	superAdminRoute.Use(util.JWTAuth())
 	/*****************************************************************/
 	// super admin users roles route
-	superAdminRoute.POST("/user/role", controller.CreateRole)
+	superAdminRoute.POST("/user/roles", controller.CreateRole)
 	superAdminRoute.GET("/user/roles", controller.GetRoles)
-	superAdminRoute.GET("/user/role/:id", controller.GetRole)
-	superAdminRoute.PUT("/user/role/:id", controller.UpdateRole)
-	superAdminRoute.DELETE("/user/role/:id", controller.DeleteRole)
+	superAdminRoute.GET("/user/roles/:id", controller.GetRole)
+	superAdminRoute.PUT("/user/roles/:id", controller.UpdateRole)
+	superAdminRoute.DELETE("/user/roles/:id", controller.DeleteRole)
 	/*****************************************************************/
 	// super admin users route
 	superAdminRoute.POST("/users", controller.CreateUser)
 	superAdminRoute.GET("/users", controller.GetUsers)
-	superAdminRoute.GET("/user/:id", controller.GetUser)
-	superAdminRoute.PUT("/user/:id", controller.UpdateUser)
-	superAdminRoute.DELETE("/user/:id", controller.DeleteUser)
+	superAdminRoute.GET("/users/:id", controller.GetUser)
+	superAdminRoute.PUT("/users/:id", controller.UpdateUser)
+	superAdminRoute.DELETE("/users/:id", controller.DeleteUser)
 	/*****************************************************************/
 	// super admin orders route
 	superAdminRoute.GET("/orders", controller.GetOrders)
@@ -40,7 +40,7 @@ func setUpSuperAdminRoutes(superAdminRoute *gin.RouterGroup) {
 	superAdminRoute.PUT("/password", controller.UpdatePassword)
 	/*****************************************************************/
 	// super admin category route
-	superAdminRoute.GET("/categories", controller.GetCategories)
+	superAdminRoute.GET("/category", controller.GetCategories)
 	superAdminRoute.GET("/category/:id", controller.GetCategory)
 	superAdminRoute.POST("/category", controller.AddCategory)
 	superAdminRoute.PUT("/category/:id", controller.UpdateCategory)
@@ -48,10 +48,10 @@ func setUpSuperAdminRoutes(superAdminRoute *gin.RouterGroup) {
 	/*****************************************************************/
 	// admin author route
 	superAdminRoute.GET("/authors", controller.GetAuthors)
-	superAdminRoute.GET("/author/:id", controller.GetAuthor)
-	superAdminRoute.POST("/author", controller.AddAuthor)
-	superAdminRoute.PUT("/author/:id", controller.UpdateAuthor)
-	superAdminRoute.DELETE("/author/:id", controller.DeleteAuthor)
+	superAdminRoute.GET("/authors/:id", controller.GetAuthor)
+	superAdminRoute.POST("/authors", controller.AddAuthor)
+	superAdminRoute.PUT("/authors/:id", controller.UpdateAuthor)
+	superAdminRoute.DELETE("/authors/:id", controller.DeleteAuthor)
 	/*****************************************************************/
 
 }

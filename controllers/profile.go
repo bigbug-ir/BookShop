@@ -3,37 +3,16 @@ package controller
 import (
 	model "bmacharia/jwt-go-rbac/models"
 	util "bmacharia/jwt-go-rbac/utils"
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 /*****************************************************************/
 //create the details of the applicant
 func AddProfile(context *gin.Context) {
-	tokenString, err := util.ExtractTokenFromHeader(context)
-	if err != nil {
-		context.JSON(401, gin.H{"error": "Invalid token"})
-		return
-	}
-	id, err := util.ExtractUserIDFromToken(tokenString)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
 	var User model.User
-	userId := context.GetInt(id)
-	err = model.GetUser(&User, userId)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
-			return
-		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
-		return
-	}
+	User = util.CurrentUser(context)
 	var input model.Profile
 	if err := context.ShouldBindJSON(&input); err != nil {
 		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
@@ -65,29 +44,10 @@ func AddProfile(context *gin.Context) {
 /*****************************************************************/
 //Get the details of the applicant
 func GetProfile(context *gin.Context) {
-	tokenString, err := util.ExtractTokenFromHeader(context)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
-	id, err := util.ExtractUserIDFromToken(tokenString)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
 	var User model.User
-	userId := context.GetInt(id)
-	err = model.GetUser(&User, userId)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
-			return
-		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
-		return
-	}
+	User = util.CurrentUser(context)
 	var profile model.Profile
-	err = model.GetProfile(&profile, userId)
+	err := model.GetProfile(&profile, int(User.ID))
 	if err != nil {
 		context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
 		return
@@ -106,29 +66,10 @@ func GetProfile(context *gin.Context) {
 /*****************************************************************/
 // update the details of the applicant
 func UpdateProfile(context *gin.Context) {
-	tokenString, err := util.ExtractTokenFromHeader(context)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
-	id, err := util.ExtractUserIDFromToken(tokenString)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
 	var User model.User
-	userId := context.GetInt(id)
-	err = model.GetUser(&User, userId)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
-			return
-		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
-		return
-	}
+	User = util.CurrentUser(context)
 	var profile model.Profile
-	err = model.GetProfile(&profile, userId)
+	err := model.GetProfile(&profile, int(User.ID))
 	if err != nil {
 		context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("Profile"))
 		return
