@@ -17,7 +17,7 @@ func CreateRole(context *gin.Context) {
 	context.BindJSON(&Role)
 	err := model.CreateRole(&Role)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -37,7 +37,7 @@ func GetRoles(context *gin.Context) {
 	var Role []model.Role
 	err := model.GetRoles(&Role)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -89,13 +89,13 @@ func UpdateRole(context *gin.Context) {
 			return
 		}
 
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.BindJSON(&Role)
 	err = model.UpdateRole(&Role)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -120,13 +120,13 @@ func DeleteRole(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("Role"))
 			return
 		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.BindJSON(&Role)
 	err = model.DeleteRole(&Role)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{

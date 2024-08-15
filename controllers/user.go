@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"golang.org/x/crypto/bcrypt"
 
 	"gorm.io/gorm"
 )
@@ -20,7 +21,7 @@ import (
 func Register(context *gin.Context) {
 	var input model.Register
 	if err := context.ShouldBindJSON(&input); err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	user := model.User{
@@ -31,7 +32,7 @@ func Register(context *gin.Context) {
 	}
 	savedUser, err := user.Save()
 	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	context.JSON(http.StatusCreated, gin.H{"user": savedUser})
@@ -50,22 +51,22 @@ func Login(context *gin.Context) {
 				errorMessage = fmt.Sprintf("%s not provided", validationError.Field())
 			}
 		}
-		context.JSON(model.ResponseBadRequuest().Status, gin.H{"error": errorMessage})
+		context.JSON(model.ResponseBadRequuest(errorMessage).Status, model.ResponseBadRequuest(errorMessage))
 		return
 	}
 	user, err := model.GetUserByUsername(input.Username)
 	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	err = user.ValidateUserPassword(input.Password)
 	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	jwt, err := util.GenerateJWT(user)
 	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	context.Header("Authorization", "Bearer "+jwt)
@@ -89,7 +90,7 @@ func Login(context *gin.Context) {
 func CreateUser(context *gin.Context) {
 	var input model.User
 	if err := context.ShouldBindJSON(&input); err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	user := model.User{
@@ -100,7 +101,7 @@ func CreateUser(context *gin.Context) {
 	}
 	savedUser, err := user.Save()
 	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	context.JSON(http.StatusCreated, model.Response{
@@ -119,7 +120,7 @@ func CreateUser(context *gin.Context) {
 func CreateUserByAdmin(context *gin.Context) {
 	var input model.User
 	if err := context.ShouldBindJSON(&input); err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	if input.RoleID == 1 {
@@ -134,7 +135,7 @@ func CreateUserByAdmin(context *gin.Context) {
 	}
 	savedUser, err := user.Save()
 	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	context.JSON(http.StatusCreated, model.Response{
@@ -154,7 +155,7 @@ func GetUsers(context *gin.Context) {
 	var user []model.User
 	err := model.GetUsers(&user)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -179,7 +180,7 @@ func GetUser(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
 			return
 		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, user)
@@ -206,10 +207,12 @@ func Auth(context *gin.Context) {
 func UpdateUserAuth(context *gin.Context) {
 	var User model.User
 	User = util.CurrentUser(context)
-	context.BindJSON(&User)
-	err := model.UpdateUser(&User)
+	var user model.User
+	err := model.GetUser(&user, int(User.ID))
+	context.ShouldBindBodyWithJSON(&User)
+	err = model.UpdateUser(&user)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -234,26 +237,33 @@ func UpdatePassword(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
 			return
 		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	var input model.Password
-	if err := context.ShouldBindJSON(&input); err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+	if err := context.ShouldBindBodyWithJSON(&input); err != nil {
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	err = model.CheckPassword(&input)
 	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
+		return
 	}
 	err = User.ValidateUserPassword(input.PrevPassword)
 	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.NewPassWord), bcrypt.DefaultCost)
+	if err != nil {
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
+		return
+	}
+	User.Password = string(passwordHash)
 	err = model.UpdatePassword(&User)
 	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -277,13 +287,13 @@ func UpdateUser(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
 			return
 		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.BindJSON(&User)
 	err = model.UpdateUser(&User)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -307,7 +317,7 @@ func UpdateUserByAdmin(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
 			return
 		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	if User.RoleID == 1 {
@@ -317,7 +327,7 @@ func UpdateUserByAdmin(context *gin.Context) {
 	context.BindJSON(&User)
 	err = model.UpdateUser(&User)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -342,12 +352,12 @@ func DeleteUser(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("User"))
 			return
 		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	err = model.DeleteUser(&User)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{

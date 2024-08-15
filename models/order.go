@@ -10,12 +10,11 @@ import (
 
 type Order struct {
 	gorm.Model
-	ID         uint        `gorm:"primaryKey"`
-	UserID     uint        `gorm:"not null"`
-	User       User        `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Item       []OrderBook `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	TotalPrice float64     `gorm:"not null"`
-	Status     string      `gorm:"size:100;not null"`
+	UserID     uint    `gorm:"not null"`
+	User       User    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Books      []Book  `gorm:"many2many:order_books;"`
+	TotalPrice float64 `gorm:"not null"`
+	Status     string  `gorm:"size:100;not null"`
 }
 
 /*****************************************************************/

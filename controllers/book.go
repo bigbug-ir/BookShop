@@ -17,7 +17,7 @@ func AddBook(context *gin.Context) {
 	var input model.Book
 	err := context.ShouldBindJSON(&input)
 	if err != nil {
-		context.JSON(http.StatusBadRequest, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	category := model.Category{
@@ -46,13 +46,13 @@ func AddBook(context *gin.Context) {
 	}
 	authorBook, err := model.GetAllBooksByAuthor(int(author.ID))
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	author.Books = authorBook
 	savedBook, err := book.Save()
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusCreated, model.Response{
@@ -72,7 +72,7 @@ func GetBooks(context *gin.Context) {
 	var book []model.Book
 	err := model.GetBooks(&book)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -93,7 +93,7 @@ func GetBook(context *gin.Context) {
 	var book model.Book
 	err := model.GetBookById(&book, id)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -118,26 +118,17 @@ func UpdateBook(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("Book"))
 			return
 		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
-	var input model.Book
-	err = context.ShouldBindBodyWithJSON(&input)
+	err = context.ShouldBindBodyWithJSON(&book)
 	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
-	}
-	book = model.Book{
-		ID:          book.ID,
-		Title:       input.Title,
-		Description: input.Description,
-		Price:       input.Price,
-		AuthorID:    input.AuthorID,
-		CategoryID:  input.CategoryID,
 	}
 	err = model.UpdateBook(&book)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -162,12 +153,12 @@ func DeleteBook(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("book"))
 			return
 		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	err = model.DeleteBook(&Book)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{

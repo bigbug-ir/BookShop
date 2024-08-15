@@ -12,7 +12,7 @@ func AddCategory(context *gin.Context) {
 	var input model.Category
 	err := context.ShouldBindBodyWithJSON(&input)
 	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	category := model.Category{
@@ -20,7 +20,7 @@ func AddCategory(context *gin.Context) {
 	}
 	savedCategory, err := category.Save()
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -38,7 +38,7 @@ func GetCategories(context *gin.Context) {
 	var Category []model.Category
 	err := model.GetCategories(&Category)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 	}
 	context.JSON(http.StatusOK, model.Response{
 		Status:  http.StatusOK,
@@ -55,7 +55,7 @@ func GetCategory(context *gin.Context) {
 	var Category model.Category
 	err := model.GetCategory(&Category, id)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -74,12 +74,13 @@ func UpdateCategory(context *gin.Context) {
 	var category model.Category
 	err := model.GetCategory(&category, id)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
+		return
 	}
 	context.BindJSON(&category)
 	err = model.UpdateCategory(&category)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -98,13 +99,13 @@ func DeleteCategory(context *gin.Context) {
 	var category model.Category
 	err := model.GetCategory(&category, id)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.BindJSON(&category)
 	err = model.DeleteCategory(&category)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{

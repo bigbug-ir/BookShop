@@ -20,10 +20,10 @@ type Data struct {
 
 /*****************************************************************/
 
-func ResponseInternalServerError() Response {
+func ResponseInternalServerError(msg string) Response {
 	return Response{
 		Status:  http.StatusInternalServerError,
-		Message: "Internal server error",
+		Message: msg,
 	}
 }
 
@@ -38,10 +38,10 @@ func ResponseErrRecordNotFound(name string) Response {
 
 /*****************************************************************/
 
-func ResponseBadRequuest() Response {
+func ResponseBadRequuest(msg string) Response {
 	return Response{
 		Status:  http.StatusBadRequest,
-		Message: "Invalid request",
+		Message: msg,
 	}
 }
 

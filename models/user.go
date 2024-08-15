@@ -84,8 +84,8 @@ func GetUserById(id int) (User, error) {
 
 /*****************************************************************/
 
-func CheckCustomer(User *User, id int) (err error) {
-	err = database.Database.DB.Preload("Profile").Where("role_id=? AND id=? ", int(3), id).First(User).Error
+func CheckCustomer(User *User) (err error) {
+	err = database.Database.DB.Preload("Profile").Where("role_id=? ", int(3)).First(User).Error
 	if err != nil {
 		return err
 	}

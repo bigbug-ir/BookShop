@@ -15,7 +15,7 @@ func AddProfile(context *gin.Context) {
 	User = util.CurrentUser(context)
 	var input model.Profile
 	if err := context.ShouldBindJSON(&input); err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	var profile = model.Profile{
@@ -27,7 +27,7 @@ func AddProfile(context *gin.Context) {
 	}
 	savedProfile, err := profile.Save()
 	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -77,7 +77,7 @@ func UpdateProfile(context *gin.Context) {
 	context.BindJSON(&profile)
 	err = model.UpdateProfile(&profile)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{

@@ -79,7 +79,7 @@ func UpdateBook(Book *Book) (err error) {
 /*****************************************************************/
 
 func DeleteBook(Book *Book) (err error) {
-	err = database.Database.DB.Preload("Author").Preload("Category").Delete(Book).Error
+	err = database.Database.DB.Delete(Book).Error
 	if err != nil {
 		return err
 	}

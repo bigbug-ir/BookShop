@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bmacharia/jwt-go-rbac/database"
 	model "bmacharia/jwt-go-rbac/models"
 	util "bmacharia/jwt-go-rbac/utils"
 	"errors"
@@ -12,71 +13,67 @@ import (
 )
 
 /*****************************************************************/
-// Add order from costomer route
+// // Add order from costomer route
 func AddOrder(context *gin.Context) {
-	token, err := util.ExtractTokenFromHeader(context)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
-	userId, err := util.ExtractUserIDFromToken(token)
-	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
-		return
-	}
-	id := context.GetInt(userId)
 	var user model.User
-	err = model.CheckCustomer(&user, id)
-	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
-		return
-	}
+	user = util.CurrentUser(context)
 	var input struct {
-		CustomerID uint `json:"customer_id"`
-		Items      []struct {
+		UserID uint `json:"user_id"`
+		Items  []struct {
 			BookID   uint `json:"book_id"`
 			Quantity uint `json:"quantity"`
 		} `json:"items"`
 	}
-	err = context.ShouldBindJSON(&input)
+	err := context.ShouldBindBodyWithJSON(&input)
 	if err != nil {
-		context.JSON(model.ResponseBadRequuest().Status, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
+	var books []model.Book
 	var totalAmount float64
 	var orderItems []model.OrderBook
 	for _, item := range input.Items {
-		var book model.Book
-		err := model.GetBookById(&book, int(item.BookID))
+		var Book model.Book
+		err := model.GetBookById(&Book, int(item.BookID))
 		if err != nil {
-			context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+			context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 			return
 		}
 		orderItem := model.OrderBook{
-			BookID:   book.ID,
+			BookID:   Book.ID,
 			Quantity: int(item.Quantity),
-			Book:     book,
+			Book:     Book,
 		}
+		books = append(books, Book)
 		orderItems = append(orderItems, orderItem)
-		totalAmount += book.Price * float64(item.Quantity)
+		totalAmount = Book.Price * float64(item.Quantity)
 	}
 	order := model.Order{
 		UserID:     user.ID,
-		Item:       orderItems,
+		User:       user,
+		Books:      books,
 		TotalPrice: totalAmount,
+		Status:     "pending",
 	}
-	savedOrder, err := order.Save()
-	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+	if err := database.Database.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&order).Error; err != nil {
+			return err
+		}
+		for i := range orderItems {
+			orderItems[i].OrderID = order.ID
+			if err := tx.Create(&orderItems[i]).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
-	context.JSON(http.StatusOK, model.Response{
-		Status:  http.StatusOK,
-		Message: "success",
-		Data: model.Data{
-			Status:  true,
-			Message: "Success",
-			Result:  savedOrder,
-		},
+	context.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"message": "Order successfully created",
+		"data":    order,
 	})
 }
 
@@ -86,7 +83,7 @@ func GetOrders(context *gin.Context) {
 	var order []model.Order
 	err := model.GetOrders(&order)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -107,7 +104,7 @@ func GetAllOrderCustomer(context *gin.Context) {
 	var order []model.Order
 	err := model.GetOrdersCustomer(&order, id)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -129,7 +126,7 @@ func GetOrderCustomer(context *gin.Context) {
 	var order model.Order
 	err := model.GetOrderCustomer(&order, id, user)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -152,7 +149,7 @@ func GetOrderCustomerAuth(context *gin.Context) {
 	var order model.Order
 	err := model.GetOrderCustomer(&order, id, int(User.ID))
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -174,7 +171,7 @@ func GetAllOrderCustomerAuth(context *gin.Context) {
 	var order []model.Order
 	err := model.GetOrdersCustomer(&order, int(User.ID))
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -195,7 +192,7 @@ func GetOrder(context *gin.Context) {
 	id, _ := strconv.Atoi(context.Param("id"))
 	err := model.GetOrder(&order, id)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -220,13 +217,13 @@ func UpdateOrder(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("Order"))
 			return
 		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.BindJSON(&order)
 	err = model.UpdateOrder(&order)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -252,12 +249,12 @@ func DeleteOrder(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("Order"))
 			return
 		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	err = model.DeleteOrder(&order)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{

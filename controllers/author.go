@@ -15,7 +15,7 @@ import (
 func AddAuthor(context *gin.Context) {
 	var input model.Author
 	if err := context.ShouldBindBodyWithJSON(&input); err != nil {
-		context.JSON(http.StatusBadRequest, model.ResponseBadRequuest())
+		context.JSON(model.ResponseBadRequuest(err.Error()).Status, model.ResponseBadRequuest(err.Error()))
 		return
 	}
 	author := model.Author{
@@ -25,7 +25,7 @@ func AddAuthor(context *gin.Context) {
 
 	savedAuthor, err := author.Save()
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -70,7 +70,7 @@ func GetAuthor(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("Author"))
 			return
 		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -95,13 +95,13 @@ func UpdateAuthor(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("Author"))
 			return
 		}
-		context.JSON(http.StatusInternalServerError, model.ResponseInternalServerError())
+		context.JSON(http.StatusInternalServerError, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.BindJSON(&author)
 	err = model.UpdateAuthor(&author)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
@@ -126,12 +126,12 @@ func DeleteAuthor(context *gin.Context) {
 			context.JSON(http.StatusNotFound, model.ResponseErrRecordNotFound("Author"))
 			return
 		}
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	err = model.DeleteAuthor(&author)
 	if err != nil {
-		context.JSON(model.ResponseInternalServerError().Status, model.ResponseInternalServerError())
+		context.JSON(model.ResponseInternalServerError(err.Error()).Status, model.ResponseInternalServerError(err.Error()))
 		return
 	}
 	context.JSON(http.StatusOK, model.Response{
