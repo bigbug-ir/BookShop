@@ -53,5 +53,12 @@ func setUpSuperAdminRoutes(superAdminRoute *gin.RouterGroup) {
 	superAdminRoute.PUT("/authors/:id", controller.UpdateAuthor)
 	superAdminRoute.DELETE("/authors/:id", controller.DeleteAuthor)
 	/*****************************************************************/
+	// admin books route
+	superAdminRoute.GET("/books", controller.GetBooks)
+	superAdminRoute.GET("/books/:id", controller.GetBook)
+	superAdminRoute.POST("/books", controller.AddBook)
+	superAdminRoute.PUT("/books/:id", controller.UpdateBook)
+	superAdminRoute.DELETE("/books/:id", controller.DeleteBook)
+	/*****************************************************************/
 
 }

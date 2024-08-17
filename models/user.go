@@ -47,7 +47,7 @@ func (user *User) BeforeSave(*gorm.DB) error {
 /*****************************************************************/
 // Get all users
 func GetUsers(User *[]User) (err error) {
-	err = database.Database.DB.Preload("Profile").Find(User).Error
+	err = database.Database.DB.Preload("Profile").Preload("Orders").Find(User).Error
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func GetUsers(User *[]User) (err error) {
 // Get user by username
 func GetUserByUsername(username string) (User, error) {
 	var user User
-	err := database.Database.DB.Preload("Profile").Where("username=?", username).Find(&user).Error
+	err := database.Database.DB.Preload("Profile").Preload("Orders").Where("username=?", username).Find(&user).Error
 	if err != nil {
 		return User{}, err
 	}
@@ -85,7 +85,7 @@ func GetUserById(id int) (User, error) {
 /*****************************************************************/
 
 func CheckCustomer(User *User) (err error) {
-	err = database.Database.DB.Preload("Profile").Where("role_id=? ", int(3)).First(User).Error
+	err = database.Database.DB.Preload("Profile").Preload("Orders").Where("role_id=? ", int(3)).First(User).Error
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func CheckCustomer(User *User) (err error) {
 /*****************************************************************/
 // Get user by id
 func GetUser(User *User, id int) (err error) {
-	err = database.Database.DB.Preload("Profile").Where("id = ?", id).First(User).Error
+	err = database.Database.DB.Preload("Profile").Preload("Orders").Where("id = ?", id).First(User).Error
 	if err != nil {
 		return err
 	}

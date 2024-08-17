@@ -47,7 +47,6 @@ func ValidateJWT(context *gin.Context) error {
 }
 
 /*****************************************************************/
-
 // validate Admin role
 func ValidateAdminRoleJWT(context *gin.Context) error {
 	token, err := getToken(context)
@@ -78,7 +77,6 @@ func ValidateSuperAdminRoleJWT(context *gin.Context) error {
 }
 
 /*****************************************************************/
-
 // validate Customer role
 func ValidateCustomerRoleJWT(context *gin.Context) error {
 	token, err := getToken(context)
@@ -94,7 +92,6 @@ func ValidateCustomerRoleJWT(context *gin.Context) error {
 }
 
 /*****************************************************************/
-
 // validate Support role
 func ValidateSupportRoleJWT(context *gin.Context) error {
 	token, err := getToken(context)
@@ -110,7 +107,6 @@ func ValidateSupportRoleJWT(context *gin.Context) error {
 }
 
 /*****************************************************************/
-
 // fetch user details from the token
 func CurrentUser(context *gin.Context) model.User {
 	err := ValidateJWT(context)
@@ -129,7 +125,6 @@ func CurrentUser(context *gin.Context) model.User {
 }
 
 /*****************************************************************/
-
 // check token validity
 func getToken(context *gin.Context) (*jwt.Token, error) {
 	varprivateKeyPEM, err := ioutil.ReadFile("private_key.pem")

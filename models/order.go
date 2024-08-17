@@ -2,14 +2,12 @@ package model
 
 import (
 	"bmacharia/jwt-go-rbac/database"
-
-	"gorm.io/gorm"
 )
 
 /*****************************************************************/
 
 type Order struct {
-	gorm.Model
+	ID         uint    `gorm:"primaryKey"`
 	UserID     uint    `gorm:"not null"`
 	User       User    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Books      []Book  `gorm:"many2many:order_books;"`
@@ -20,7 +18,7 @@ type Order struct {
 /*****************************************************************/
 
 func (order *Order) Save() (*Order, error) {
-	err := database.Database.DB.Create(&order).Error
+	err := database.Database.DB.Preload("User").Preload("Books").Create(&order).Error
 	if err != nil {
 		return &Order{}, err
 	}
@@ -30,7 +28,7 @@ func (order *Order) Save() (*Order, error) {
 /*****************************************************************/
 
 func GetOrders(order *[]Order) (err error) {
-	err = database.Database.DB.Find(order).Error
+	err = database.Database.DB.Preload("User").Preload("Books").Find(order).Error
 	if err != nil {
 		return err
 	}
@@ -40,7 +38,7 @@ func GetOrders(order *[]Order) (err error) {
 /*****************************************************************/
 
 func GetOrder(order *Order, id int) (err error) {
-	err = database.Database.DB.Where("id=?", id).First(&order).Error
+	err = database.Database.DB.Preload("User").Preload("Books").Where("id=?", id).First(&order).Error
 	if err != nil {
 		return err
 	}
@@ -50,7 +48,7 @@ func GetOrder(order *Order, id int) (err error) {
 /*****************************************************************/
 
 func GetOrdersCustomer(order *[]Order, id int) (err error) {
-	err = database.Database.DB.Where("user_id=?", id).Find(&order).Error
+	err = database.Database.DB.Preload("User").Preload("Books").Where("user_id=?", id).Find(&order).Error
 	if err != nil {
 		return err
 	}
@@ -60,7 +58,7 @@ func GetOrdersCustomer(order *[]Order, id int) (err error) {
 /*****************************************************************/
 
 func GetOrderCustomer(order *Order, id int, userId int) (err error) {
-	err = database.Database.DB.Where("id=? AND user_id=?", id, userId).First(&order).Error
+	err = database.Database.DB.Preload("User").Preload("Books").Where("id=? AND user_id=?", id, userId).First(&order).Error
 	if err != nil {
 		return err
 	}
